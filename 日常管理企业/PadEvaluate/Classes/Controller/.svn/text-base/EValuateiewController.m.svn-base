@@ -1,0 +1,174 @@
+//
+//  EValuateiewController.m
+//  PadEvaluate
+//
+//  Created by hzth-mac3 on 15/12/15.
+//  Copyright © 2015年 hzth-mac3. All rights reserved.
+//
+
+#import "EValuateiewController.h"
+#import "UpScoreViewController.h"
+#import "EValueteController.h"
+#import "TYHHttpTool.h"
+#import "Public.h"
+#import "MJExtension.h"
+#import "WorkListModal.h"
+#import "NewEvaluateModel.h"
+#import "OnceEnterModel.h"
+
+
+@interface EValuateiewController ()
+@property (nonatomic, strong) NSMutableArray * dataArray;
+@property (nonatomic, strong) NSUserDefaults * userDefault;
+@end
+
+@implementation EValuateiewController
+
+
+- (void)initData {
+
+    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
+    _loginName = [defaults valueForKey:USER_DEFAULT_LOGINNAME];
+    _passWord = [defaults valueForKey:USER_DEFAULT_PASSWORD];
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    [self initData];
+    
+    self.adminName.text = self.model.name;
+    
+    // 获取列表数据
+    [self getTableviewData];
+    
+    [self initTableView];
+    
+    UIView * clearview = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 100, 44)];
+    clearview.backgroundColor = [UIColor TabBarColorGreen];
+    clearview.userInteractionEnabled = NO;
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
+                                             initWithCustomView:clearview];
+
+    self.title = @"日常管理";
+}
+
+- (void)getTableviewData {
+
+    
+    NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getUserTask.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@",BaseUrl,_loginName,_passWord];
+    NSLog(@"%@",urlStr);
+    
+    self.dataArray = [[NSMutableArray alloc] init];
+    [TYHHttpTool get:urlStr params:nil success:^(id json) {
+        
+       self.dataArray = [WorkListModal mj_objectArrayWithKeyValuesArray:json];
+        NSLog(@"json === %@",json);
+        
+        [self.newsTabelView reloadData];
+        
+        NSLog(@"self.dataArray == %@ ",self.dataArray);
+        
+    } failure:^(NSError *error) {
+        NSLog(@"%@",error);
+    }];
+    
+}
+
+- (void)initTableView {
+
+    self.newsTabelView.delegate = self;
+    self.newsTabelView.dataSource = self;
+    [self.newsTabelView setTableFooterView:[[UIView alloc] initWithFrame:CGRectZero]];
+    self.newsTabelView.rowHeight = 66;
+    
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    
+    NSString * strlist = [NSString stringWithFormat:@"任务列表(%ld)",(long)self.dataArray.count];
+    _listCount.text = strlist;
+    
+    return self.dataArray.count;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    static NSString * idenfitier = @"secondCell";
+    SecondCell *cell = (SecondCell *)[tableView dequeueReusableCellWithIdentifier:idenfitier];
+    if (cell == nil) {
+        cell = [tableView dequeueReusableCellWithIdentifier:idenfitier forIndexPath:indexPath];
+    }
+    WorkListModal * model = _dataArray[indexPath.row];
+    cell.evaluateName.text = model.name;
+    if ([model.submitFlag isEqualToString:@"0"]) {
+        cell.unEvaluate.text = @"未评价";
+    } else {
+        cell.unEvaluate.text = @"已评价";
+        cell.unEvaluate.textColor = [UIColor greenColor];
+    }
+
+    return cell;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+//    UpScoreViewController *main = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"UpScoreViewController"];
+//    
+//    
+    WorkListModal * model = _dataArray[indexPath.row];
+//
+//    main.model = model;
+//    
+////    NSString * nextTable = [NSString stringWithFormat:@"%@"]
+//    NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getScoreStandards.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@&evaluateItemId=%@",k_V3ServerURL,_loginName,_passWord,model.evaluateItemId];
+//    
+//    NSLog(@"urlStr == %@",urlStr);
+//    
+//    [TYHHttpTool get:urlStr params:nil success:^(id json) {
+//        
+//        NSLog(@"hehe   json == %@",json);
+//        
+//        main.workListArray = json[@"scoreStandards"];
+////        NSLog(@"main.workListArray = = %@",main.workListArray);
+//        
+//    } failure:^(NSError *error) {
+//        
+//    }];
+
+    EValueteController *main = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"EValueteController"];
+    
+    main.evaluateItemId = model.evaluateItemId;
+    
+    [self.navigationController pushViewController:main animated:YES];
+}
+
+#pragma mark - Navigation
+- (IBAction)quitLogin:(id)sender {
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+- (IBAction)evaluate:(id)sender {
+    
+    NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getEvaluateItemTree.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@",BaseUrl,_loginName,_passWord];
+    NSLog(@"%@",urlStr);
+    
+    
+    [TYHHttpTool get:urlStr params:nil success:^(id json) {
+        
+        NSLog(@"json === %@",json);
+    
+        EValueteController *main = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"EValueteController"];
+        
+        main.evaluateTableArray = [NewEvaluateModel mj_objectArrayWithKeyValuesArray:json];
+        
+        [self.navigationController pushViewController:main animated:YES];
+        
+        
+    } failure:^(NSError *error) {
+        NSLog(@"%@",error);
+    }];
+    
+}
+@end

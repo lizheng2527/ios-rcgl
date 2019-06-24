@@ -1,0 +1,352 @@
+//
+//  EValueteViewController.m
+//  PadEvaluate
+//
+//  Created by hzth-mac3 on 15/12/15.
+//  Copyright © 2015年 hzth-mac3. All rights reserved.
+//
+
+#import "EValueteController.h"
+#import "UpScoreViewController.h"
+#import "DropDownMenu.h"
+#import "ChooseClassCotroller.h"
+#import "ChoosePersonController.h"
+#import "NewEvaluateModel.h"
+#import "TYHHttpTool.h"
+#import "Public.h"
+#import "MJExtension.h"
+#import "LifeModel.h"
+#import "SubLifeModel.h"
+#import "SecondDropMenu.h"
+#import "PersonModel.h"
+
+
+@interface EValueteController ()<DropDownMwnuDelegate,ClassMenuDelegate,PersonMenuDelegate,SecondDropMenuDelegate>
+@property (nonatomic, strong) LifeModel * lifeModel;
+@property (nonatomic, copy) NSString * str;
+@property (nonatomic, strong) NSMutableArray * classData;
+@property (nonatomic, strong) NSMutableArray * personData;
+@end
+
+@implementation EValueteController
+- (NSMutableArray *)personData {
+
+    if (_personData == nil) {
+        self.personData = [[NSMutableArray alloc] init];
+    }
+    return _personData;
+}
+- (NSMutableArray *)classData {
+
+    if (_classData == nil) {
+        self.classData = [[NSMutableArray alloc] init];
+    }
+    return _classData;
+}
+- (void)initData {
+    
+    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
+    _loginName = [defaults valueForKey:USER_DEFAULT_LOGINNAME];
+    _passWord = [defaults valueForKey:USER_DEFAULT_PASSWORD];
+}
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    [self initData];
+    
+    self.deadTableView.dataSource = self;
+    self.deadTableView.delegate = self;
+    self.deadTableView.userInteractionEnabled = NO;
+    self.deadTableView.tag = 101;
+    
+    
+    self.lifeTableView.delegate = self;
+    self.lifeTableView.dataSource = self;
+    [self.lifeTableView setTableFooterView:[[UIView alloc] initWithFrame:CGRectZero]];
+    self.lifeTableView.tag = 102;
+    
+    
+    self.leftTableView.delegate = self;
+    self.leftTableView.dataSource = self;
+    [self.leftTableView setTableFooterView:[[UIView alloc] initWithFrame:CGRectZero]];
+    self.leftTableView.tag = 103;
+    
+    
+    [self.scroolView contentSizeToFit];
+    
+    _evaluateLevelArray = [[NSMutableArray alloc] init];
+    
+    [self getClassesData];
+}
+- (void)getClassesData {
+    
+    NSString * urlStr  = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getEclasses.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@",BaseUrl,_loginName,_passWord];
+    NSLog(@"urlStrClass === %@",urlStr);
+    
+    [TYHHttpTool get:urlStr params:nil success:^(id json) {
+        
+        NSLog(@"json == %@",json);
+        _classData = [ClassModel mj_objectArrayWithKeyValuesArray:json];
+        
+    } failure:^(NSError *error) {
+        
+    }];
+}
+- (IBAction)chooseClass:(UIButton *)sender {
+    
+    DropDownMenu *drop = [[DropDownMenu alloc] init];
+    // 设置下拉菜单弹出、销毁事件的监听者
+    drop.delegate = self;
+    
+    // 2.设置要显示的内容
+    ChooseClassCotroller *titleMenu = [[ChooseClassCotroller alloc] init];
+    
+    titleMenu.drop = drop;
+    titleMenu.delegate = self;
+    titleMenu.classData = self.classData;
+    
+    // 这里定义下拉个数
+    if (_classData.count < 6) {
+        
+        titleMenu.view.height = 44*_classData.count;
+    }
+    else {
+        titleMenu.view.height = 44*6;
+    }
+    titleMenu.view.width = _menubtn.frame.size.width*2;
+    
+    drop.contentController = titleMenu;
+    // 显示
+    [drop showFrom:sender];
+}
+
+
+- (IBAction)choosePerson:(id)sender {
+    SecondDropMenu *drops = [[SecondDropMenu alloc] init];
+    // 设置下拉菜单弹出、销毁事件的监听者
+    drops.delegate = self;
+    
+    ChoosePersonController *titleMenuVC = [[ChoosePersonController alloc] init];
+    
+    titleMenuVC.drops = drops;
+    titleMenuVC.delegate = self;
+    titleMenuVC.ID = self.model.id;
+    titleMenuVC.personData = self.personData;
+    // 这里定义下拉个数
+    if (_personData.count < 6) {
+        titleMenuVC.view.height = 44 * _personData.count;
+    }
+    else {
+        titleMenuVC.view.height = 44 * 6 ;
+    }
+    titleMenuVC.view.width = _personBtn.frame.size.width* 2;
+    drops.contentController = titleMenuVC;
+    [drops showfroms:sender];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    
+    if (tableView.tag == 101) {
+        
+        return 1;
+        
+    } else if (tableView.tag == 102) {
+    
+        if (_evaluateLevelArray.count == 0) {
+            
+            return 5;
+        } else
+        return _evaluateLevelArray.count;
+        
+    } else
+        
+        return _evaluateTableArray.count;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (tableView.tag == 102) {
+
+        static NSString * idenfitier = @"lifeCell";
+        LifeCell *cell = (LifeCell *)[tableView dequeueReusableCellWithIdentifier:idenfitier];
+        if (cell == nil) {
+            cell = [[LifeCell alloc] initWithStyle:UITableViewCellStyleDefault  reuseIdentifier: idenfitier];
+        }
+        if (_evaluateLevelArray.count > 0) {
+            LifeModel * model =  _evaluateLevelArray[indexPath.row];
+            
+            if ([model.name isEqualToString:@"总分"]) {
+                
+                cell.two.text = [NSString stringWithFormat:@"%@",model.maxscore];
+            } else{
+                cell.two.text = [NSString stringWithFormat:@"%@~%@",model.minscore,model.maxscore];
+            }
+            
+            if (model.levels.count > 0) {
+                
+                for (NSDictionary * dict in model.levels) {
+                    
+                    NSString * str  = [NSString stringWithFormat:@"%@(%@-%@)",dict[@"name"],dict[@"minscore"],dict[@"maxscore"]];
+                    
+                    self.str = [str stringByAppendingFormat:@"%@",self.str];
+                    
+                };
+            }
+           
+            NSLog(@"self.str  =  %@",self.str);
+            cell.three.text = self.str;
+            self.str = nil;
+            cell.four.text = model.note;
+            
+            cell.one.text = model.name;
+
+        }
+        return cell;
+        
+        
+    } else if (tableView.tag == 101) {
+        
+        static NSString * idenfitier = @"deadCell";
+        DeadCell *cell = (DeadCell *)[tableView dequeueReusableCellWithIdentifier:idenfitier];
+        if (cell == nil) {
+            cell = [[DeadCell alloc] initWithStyle:UITableViewCellStyleDefault  reuseIdentifier: idenfitier];
+        }
+        return cell;
+        
+    } else {
+        static NSString * idenfitier = @"leftCell";
+        LeftCell *cell = (LeftCell *)[tableView dequeueReusableCellWithIdentifier:idenfitier];
+        if (cell == nil) {
+            
+            cell = [[LeftCell alloc] initWithStyle:UITableViewCellStyleDefault  reuseIdentifier: idenfitier];
+        }
+        
+        NewEvaluateModel * model = _evaluateTableArray[indexPath.row];
+        cell.textLabel.text = model.name;
+        
+        return cell;
+    }
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath  {
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (tableView.tag == 103) {
+
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+        
+        NewEvaluateModel * model = _evaluateTableArray[indexPath.row];
+        
+        NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getEvaluateStandard.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@&evaluateItemId=%@",BaseUrl,_loginName,_passWord,model.id];
+    
+        _evaluateItemId = model.id;
+        NSLog(@"urlStr = %@",urlStr);
+         _evaluateLevelArray = [[NSMutableArray alloc] init];
+        [TYHHttpTool get:urlStr params:nil success:^(id json) {
+            _evaluateLevelArray = [LifeModel mj_objectArrayWithKeyValuesArray:json];
+            [self.lifeTableView reloadData];
+        } failure:^(NSError *error) {
+            NSLog(@"%@",error);
+        }];
+    
+    }
+}
+
+- (void)getDataArrayCount:(NSMutableArray *)array {
+
+    self.classesCount = [[NSMutableArray alloc] init];
+    self.classesCount = array;
+    
+}
+- (void)getDataArrayPersonCount:(NSMutableArray *)array {
+    
+    self.personCunt = [[NSMutableArray alloc] init];
+    self.personCunt = array;
+    
+}
+
+#pragma mark - DropdownMenuDelegate
+//下拉菜单被销毁了
+- (void)dropdownMenuDidDismiss:(DropDownMenu *)menu
+{
+    _menubtn.selected = NO;
+   
+}
+- (void)dropdownPersonMenuDidDismiss:(SecondDropMenu *)menu
+{
+    _personBtn.selected = NO;
+    
+}
+
+//下拉菜单显示了
+- (void)dropdownMenuDidShow:(DropDownMenu *)menu
+{
+    _menubtn.selected = YES;
+  
+}
+- (void)dropdownPersonMenuDidShow:(SecondDropMenu *)menu
+{
+    _personBtn.selected = YES;
+    
+}
+#pragma mark - TitleMenuDelegate
+-(void)selectAtIndexPath:(NSIndexPath *)indexPath title:(NSString *)title
+{
+     self.model = _classesCount[indexPath.row];
+
+    NSLog(@"indexPath = %ld", (long)indexPath.row);
+    NSLog(@"当前选择了%@", title);
+    // 修改标题
+    [_menubtn setTitle:title forState:UIControlStateNormal];
+    
+    
+    [self getPersonData];
+   
+}
+- (void)getPersonData {
+
+    NSString * urlStr  = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getTeachers.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@&eclassId=%@",BaseUrl,_loginName,_passWord,self.model.id];
+    
+    NSLog(@"urlStrPerson === %@",urlStr);
+    
+    [TYHHttpTool get:urlStr params:nil success:^(id json) {
+        
+        NSLog(@" person json == %@",json);
+        
+        _personData = [PersonModel mj_objectArrayWithKeyValuesArray:json];
+        
+        
+    } failure:^(NSError *error) {
+        
+    }];
+    
+}
+- (void)selectPersonAtIndexPath:(NSIndexPath *)indexPath title:(NSString *)title {
+    
+    PersonModel * model = _personCunt[indexPath.row];
+    self.personId = model.id;
+    
+    [_personBtn setTitle:title forState:UIControlStateNormal];
+}
+- (IBAction)beginMark:(id)sender {
+    
+    UpScoreViewController *main = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"UpScoreViewController"];
+    
+    main.item = self.mainItem.text;
+    main.personId = self.personId;
+    main.classId = _model.id;
+    main.evaluateItemId = _evaluateItemId;
+    main.content = self.record.text;
+    
+    self.mainItem.text = nil;
+    self.record.text = nil;
+    
+    [self.navigationController pushViewController:main animated:YES];
+}
+
+
+@end

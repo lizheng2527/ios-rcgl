@@ -1,0 +1,22 @@
+//
+//  NewEvaluateModel.m
+//  PadEvaluate
+//
+//  Created by hzth-mac3 on 15/12/18.
+//  Copyright © 2015年 hzth-mac3. All rights reserved.
+//
+
+#import "NewEvaluateModel.h"
+#import "MJExtension.h"
+
+@implementation NewEvaluateModel
+
+//+ (NSDictionary *)mj_setupReplacedKeyFromPropertyName {
+//    
+//    return @{@"itemId":@"id"};
+//}
+@end
+
+@implementation NewEvaluateDetailModel
+
+@end

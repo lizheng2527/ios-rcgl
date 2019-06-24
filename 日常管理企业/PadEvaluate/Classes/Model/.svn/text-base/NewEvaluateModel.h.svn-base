@@ -1,0 +1,22 @@
+//
+//  NewEvaluateModel.h
+//  PadEvaluate
+//
+//  Created by hzth-mac3 on 15/12/18.
+//  Copyright © 2015年 hzth-mac3. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface NewEvaluateModel : NSObject
+//id = 20150525171926385664320632168156;
+//kind = 2;
+//name = 11;
+//parentId
+
+
+@property (nonatomic, copy) NSString * kind;
+@property (nonatomic, copy) NSString * id;
+@property (nonatomic, copy) NSString * name;
+@property (nonatomic, copy) NSString * parentId;
+@end

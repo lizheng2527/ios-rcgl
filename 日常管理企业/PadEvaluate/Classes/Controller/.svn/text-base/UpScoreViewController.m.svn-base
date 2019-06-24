@@ -1,0 +1,547 @@
+//
+//  UpScoreViewController.m
+//  PadEvaluate
+//
+//  Created by hzth-mac3 on 15/12/15.
+//  Copyright © 2015年 hzth-mac3. All rights reserved.
+//
+
+#import "UpScoreViewController.h"
+#import "Public.h"
+#import "TYHHttpTool.h"
+#import "MJExtension.h"
+#import "OnceEnterModel.h"
+#import "LifeModel.h"
+#import "AFNetworking.h"
+#import "UIView+Toast.h"
+
+
+@interface UpScoreViewController ()<UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UITextFieldDelegate>
+
+@property (nonatomic, copy) NSString * nameUp;
+@property (nonatomic, copy) NSString * noteUp;
+@property (nonatomic, strong) NSMutableArray * newsArray;
+@property (nonatomic, strong) NSMutableArray * unitArray;
+@property (nonatomic, strong) NSMutableArray * jsonArray;
+@property (nonatomic, assign) int sumScore;
+@property (nonatomic, copy) NSString * valueStr;
+@property (nonatomic, copy) NSString * responsePicId;
+@property (nonatomic, copy) NSMutableArray * imageArray;
+@property (nonatomic, copy) UITextField * slider;
+@property (nonatomic, copy) NSDictionary * dict1;
+
+@property (nonatomic, copy) NSDictionary * dict2;
+
+@property (nonatomic, copy) NSDictionary * dict3;
+
+@property (nonatomic, copy) NSDictionary * dict4;
+@property (nonatomic, strong) OnceEnterModel * models;
+//@property (nonatomic, assign) int 
+
+@end
+
+@implementation UpScoreViewController
+
+static int sum = 0;
+
+- (NSMutableArray *)imageArray {
+
+    if (_imageArray == nil) {
+        _imageArray = [[NSMutableArray alloc] init];
+    }
+    return _imageArray;
+}
+
+- (NSMutableArray *)jsonArray {
+
+    if (_jsonArray == nil) {
+        _jsonArray = [[NSMutableArray alloc] init];
+    }
+    return _jsonArray;
+}
+- (NSMutableArray *)unitArray {
+    
+    if (_unitArray == nil) {
+        _unitArray = [[NSMutableArray alloc] init];
+    }
+    return _unitArray;
+}
+
+- (NSMutableArray *)newsArray {
+
+    if (_newsArray == nil) {
+        _newsArray = [[NSMutableArray alloc] init];
+    }
+    return _newsArray;
+}
+- (void)initData {
+    
+    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
+    _loginName = [defaults valueForKey:USER_DEFAULT_LOGINNAME];
+    _passWord = [defaults valueForKey:USER_DEFAULT_PASSWORD];
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self initData];
+    
+    // Do any additional setup after loading the view.
+    
+    self.upCollectionView.delegate = self;
+    self.upCollectionView.dataSource = self;
+    self.upCollectionView.tag = 10000;
+    
+    self.unitCollection.delegate = self;
+    self.unitCollection.dataSource = self;
+    self.unitCollection.tag = 100001;
+    
+    UIBarButtonItem * rightItem = [[UIBarButtonItem alloc] initWithTitle:@"提交" style:(UIBarButtonItemStylePlain) target:self action:@selector(updownNetData)];
+    self.navigationItem.rightBarButtonItem = rightItem;
+//    rightItem.enabled = NO;
+    
+    
+    /*
+     LifeModel * model =  _evaluateLevelArray[indexPath.row];
+     
+     //归档
+     NSMutableData *data = [[NSMutableData alloc] init];
+     NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
+     
+     [archiver encodeObject:model forKey:kArchivingDataKey]; // archivingDate的encodeWithCoder
+     
+     [archiver finishEncoding];
+     //写入文件
+     [data writeToFile:multiHomePath atomically:YES];
+     
+
+     */
+    
+//    NSString *multiHomePath = [NSHomeDirectory() stringByAppendingPathComponent:@"multi.archiver"];
+//    
+//    
+//    NSData *data = [[NSMutableData alloc] initWithContentsOfFile:multiHomePath];
+//    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
+//    
+//    //获得类
+//    LifeModel *archivingData = [unarchiver decodeObjectForKey:kArchivingDataKey];// initWithCoder方法被调用
+//    [unarchiver finishDecoding];
+    // 1.获得Documents的全路径
+//    NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+//    // 2.获得文件的全路径
+//    NSString *path = [doc stringByAppendingPathComponent:@"stu.data"];
+//    NSString * paths = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"sdsds"];
+    
+//    NSLog(@"   path  ==%@",paths);
+    // 3.从文件中读取MJStudent对象
+//    LifeModel *stu = [NSKeyedUnarchiver unarchiveObjectWithFile:paths];
+    
+    
+//    //读取的数据
+//    NSString *name = stu.name;
+////    NSInteger age = archivingData.age;
+//    NSString *address = stu.note;
+////    self.imageView.image = archivingData.maxscore;
+//    NSLog(@" ==== %@   ===%@",name,address);
+    
+    
+    [self getEvaluateRecord];
+    
+}
+- (void)getEvaluateRecord {
+    
+    NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!getScoreStandards.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@&evaluateItemId=%@&eclassId=%@",BaseUrl,_loginName,_passWord,_evaluateItemId,_classId];
+
+    NSLog(@"urlStr == %@",urlStr);
+    
+    [TYHHttpTool get:urlStr params:nil success:^(id json) {
+       
+        NSLog(@"json == %@",json);
+        
+        NSArray * scoreArray = json[@"scoreStandards"];
+        NSArray * universalityArray = json[@"universalityScoreStandards"];
+        if (_workListArray != nil) {
+            
+            _newsArray = [OnceEnterModel mj_objectArrayWithKeyValuesArray:_workListArray];
+            
+        } else {
+            
+            _newsArray = [OnceEnterModel mj_objectArrayWithKeyValuesArray:scoreArray];
+            _unitArray = [OnceEnterModel mj_objectArrayWithKeyValuesArray:universalityArray];
+            NSLog(@"[OnceEnterModel mj_o  ==  %@",_newsArray);
+            
+        }
+         NSLog(@"_newsArray == %@",_newsArray);
+        
+        [self.upCollectionView reloadData];
+        
+          NSLog(@"  [self.upCollectionView reloadData];  ==  %@",_newsArray);
+        
+    } failure:^(NSError *error) {
+        
+    }];
+}
+
+- (void)updownNetData {
+    
+    NSLog(@"_item = %@, _content = %@, _comment =%@, _evaluateItemId = %@, _personId= %@, _classId = %@",_item,_content,_comment.text,_evaluateItemId,_personId,_classId);
+    
+    
+    if (_item!=nil && _content != nil && _comment.text !=nil && _evaluateItemId != nil && _personId != nil && _classId != nil && _noteUp != nil && _nameUp!=nil) {
+        
+        NSDictionary * dict = @{@"teacherEvaluateRecord":@{
+                                        @"title":_item,
+                                        @"content":_content,
+                                        @"comment":_comment.text,
+                                        @"evaluateItem":@{
+                                                @"id":_evaluateItemId
+                                                },
+                                        @"teacher":@{
+                                                @"id":_personId
+                                                },
+                                        
+                                        @"eclass":@{
+                                                @"id":_classId
+                                                }
+                                        //                                    @"investigationUser":@{
+                                        //                                            @"id":"调研任务id(taskId)"
+                                        //                                            }
+                                        
+                                        },
+                                @"teacherScores":_jsonArray,
+                                
+                                @"exampleIds": _responsePicId
+                                
+                                };
+        
+        NSLog(@"dict  = %@ ",dict);
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:&error];
+        
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        
+        NSLog(@"dsdsds  jsonString == %@",jsonString);
+        
+        
+        NSMutableDictionary * params = [NSMutableDictionary dictionary];
+//        params[@"sys_auto_authenticate"] = @"ture";
+//        params[@"sys_username"] = _loginName;
+//        params[@"sys_password"] = _passWord;
+        params[@"jsonData"] = jsonString;
+        
+        NSLog(@"params  ===   %@",params);
+        
+     NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!saveTeacherEvaluateRecord.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@",BaseUrl,_loginName,_passWord];
+        
+//        NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!saveTeacherEvaluateRecord.action",k_V3ServerURL];
+        
+        [TYHHttpTool post:urlStr params:params success:^(id json) {
+            
+            NSLog(@"json == %@ class == %@",json,[json class]);
+            
+            NSString * data = [[NSString  alloc] initWithData:json encoding:NSUTF8StringEncoding];
+            NSLog(@"data == %@",data);
+            
+            _uploadImage.image = nil;
+            _noteUp = nil;
+            _nameUp = nil;
+            _comment.text = nil;
+            
+            
+            [self.navigationController popViewControllerAnimated:YES];
+            
+        } failure:^(NSError *error) {
+            
+            NSLog(@"error ===  %@", error);
+        }];
+        
+    } else {
+    
+        [self.view makeToast:@"需要填写的项不能为空" duration:0.5 position:nil];
+    }
+
+    
+}
+#pragma mark - Collection View Data Source
+-(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
+    NSLog(@"%ld",(long)_newsArray.count);
+    return _newsArray.count;
+}
+
+-(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
+    
+    static NSString *collectionCellID = @"collectionCell";
+    UpScoreCell *cell = (UpScoreCell *)[self.upCollectionView dequeueReusableCellWithReuseIdentifier:collectionCellID forIndexPath:indexPath];
+    
+    
+    sum = 0;
+    
+    OnceEnterModel * model = _newsArray[indexPath.row];
+    self.models = model;
+
+    cell.evaluate.text = model.name;
+    
+    cell.textFieldCount.delegate = self;
+    cell.textFieldCount.tag = indexPath.item + 1000;
+    NSString * placehoder = [NSString stringWithFormat:@"%@-%@",model.minscore,model.maxscore];
+    cell.textFieldCount.placeholder = placehoder;
+    
+    NSLog(@"%ld",indexPath.item + 1000);
+    
+    
+    return cell;
+
+};
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
+    
+    
+    int b = 0;
+    for (int i = 0; i < _newsArray.count; i++) {
+        
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
+        
+        OnceEnterModel * model = _newsArray[indexPath.item];
+        
+        NSInteger tag = indexPath.row + 1000;
+        NSLog(@"%d",tag);
+        
+        if (textField.tag == tag) {
+            
+            b = [textField.text intValue];
+            NSLog(@"b == %d",b);
+            
+            if (textField.text != nil) {
+                
+                NSString * iii = model.id;
+                
+                [self.jsonArray enumerateObjectsUsingBlock:^(NSDictionary * dict, NSUInteger idx, BOOL *stop) {
+                    
+                    NSString * str = [NSString stringWithFormat:@"%@",dict[@"evaluateStandard"][@"id"]];
+                    NSLog(@"dict evaluateStandard = %@",str);
+                    
+                    if ([str isEqualToString:iii]) {
+                        
+                        NSLog(@"dict evaluateStandard = %@",dict[@"evaluateStandard"][@"id"]);
+                        NSLog(@"i == %d", i);
+                        *stop = YES;
+                        [self.jsonArray removeObject:dict];
+                    }
+                    
+                }];
+            }
+            
+            textField.text = nil;
+            
+        }
+    }
+    
+    sum = sum - b;
+    self.totalScore.text = [NSString stringWithFormat:@"%d",sum];
+    return YES;
+}
+
+- ( void )textFieldDidEndEditing:( UITextField *)textField
+{
+    
+    int a = 0;
+    
+    for (int i = 0; i < _newsArray.count; i++) {
+        
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
+        
+        OnceEnterModel * model = _newsArray[indexPath.item];
+        
+        NSInteger tag = indexPath.row + 1000;
+        NSLog(@"%d",tag);
+        
+        if (textField.tag == tag) {
+            
+            a = [textField.text intValue];
+            
+            if (textField.text != nil) {
+                
+                
+                NSDictionary * dict1 = @{@"evaluateStandard":@{
+                                                 @"id": model.id
+                                                 },
+                                         @"score": [NSString stringWithFormat:@"%d",a]
+                                         //                                                       @"level": @"A"
+                                         };
+                self.dict1  = dict1;
+            }
+        }
+    }
+    
+    [self.jsonArray addObject:self.dict1];
+    sum = sum + a;
+    
+    self.totalScore.text = [NSString stringWithFormat:@"%d",sum];
+    
+}
+
+- (IBAction)upLoadImage:(id)sender {
+    
+    UIAlertController * alertController = [UIAlertController alertControllerWithTitle:@"请先填写案例名称" message:@"案例说明" preferredStyle:UIAlertControllerStyleAlert];
+    
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * textField) {
+        textField.placeholder = @"案例名称";
+    }];
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * textField) {
+        textField.placeholder = @"案例说明";
+    }];
+    
+//    
+//            //添加Button
+//        [alertController addAction: [UIAlertAction actionWithTitle: @"拍照" style: UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+//            //处理点击拍照
+//            NSLog(@"处理点击拍照");
+//            if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+//
+//                UIImagePickerController *ipc=[[UIImagePickerController alloc] init];
+//                ipc.sourceType=UIImagePickerControllerSourceTypeCamera;
+//                ipc.delegate=self;
+//                ipc.allowsEditing=NO;
+//                [self presentViewController:ipc animated:YES completion:nil];
+//
+//            }
+//
+//
+//        }]];
+//        [alertController addAction: [UIAlertAction actionWithTitle: @"从相册选取" style: UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+//            //处理点击从相册选取
+//            NSLog(@"处理点击从相册选取");
+//
+//            if(![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) return ;
+//            
+//            UIImagePickerController *ipc=[[UIImagePickerController alloc] init];
+//            ipc.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+//            ipc.delegate=self;
+//            ipc.allowsEditing=NO;
+//            [self presentViewController:ipc animated:YES completion:nil];
+//
+//        }]];
+//
+//        [alertController addAction: [UIAlertAction actionWithTitle: @"取消" style: UIAlertActionStyleCancel handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"选择文件" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        NSArray * textfields = alertController.textFields;
+        UITextField * textField0  = textfields[0];
+        _nameUp = textField0.text;
+        UITextField * textField1 = textfields[1];
+        _noteUp = textField1.text;
+        
+        NSLog(@"_nameUp  == %@  class = %@",_nameUp,[_nameUp class]);
+        
+        if (_noteUp != nil && _nameUp != nil) {
+        
+        UIAlertController * alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleAlert];
+        
+        //添加Button
+        [alert addAction: [UIAlertAction actionWithTitle: @"拍照" style: UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            //处理点击拍照
+            NSLog(@"处理点击拍照");
+            if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                
+                UIImagePickerController *ipc=[[UIImagePickerController alloc] init];
+                ipc.sourceType=UIImagePickerControllerSourceTypeCamera;
+                ipc.delegate=self;
+                ipc.allowsEditing=NO;
+                [self presentViewController:ipc animated:YES completion:nil];
+                
+            }
+            
+            
+        }]];
+        [alert addAction: [UIAlertAction actionWithTitle: @"从相册选取" style: UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+            //处理点击从相册选取
+            NSLog(@"处理点击从相册选取");
+            
+            UIImagePickerController *ipc=[[UIImagePickerController alloc] init];
+            ipc.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            ipc.delegate=self;
+            ipc.allowsEditing=NO;
+            [self presentViewController:ipc animated:YES completion:nil];
+            
+        }]];
+        
+        [alert addAction: [UIAlertAction actionWithTitle: @"取消" style: UIAlertActionStyleCancel handler:nil]];
+        
+        [self presentViewController: alert animated: YES completion: nil];
+        }
+        else
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }]];
+//
+    
+    [self presentViewController: alertController animated: YES completion: nil];
+    
+}
+-(void) imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *) info{
+    
+    UIImage *image=[info objectForKey:@"UIImagePickerControllerOriginalImage"];
+    
+//    CGSize imagesize = image.size;
+//    imagesize.height =80;
+//    imagesize.width =80;
+//    image = [self imageWithImage:image scaledToSize:imagesize];
+    
+//    [self.imageArray addObject:image];
+    
+    NSData * data = UIImagePNGRepresentation(image);
+    
+    NSString * urlStr = [NSString stringWithFormat:@"%@/tp/mobile/teacherPlatform!saveEvaluateExample.action?sys_auto_authenticate=true&sys_username=%@&sys_password=%@",BaseUrl,_loginName,_passWord];
+    
+    NSMutableDictionary * params = [NSMutableDictionary dictionary];
+    params[@"name"]= _nameUp;
+    params[@"note"]= _noteUp;
+    params[@"uploadFileNames"] = @"image0.png";
+    
+    
+    NSLog(@"_nameUp == %@",_nameUp);
+    AFHTTPRequestOperationManager * manager = [AFHTTPRequestOperationManager manager];
+//    manager.requestSerializer = [AFJSONRequestSerializer serializer];
+//    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    //这个决定了下面responseObject返回的类型
+//    [manager.responseSerializer setAcceptableContentTypes:[NSSet setWithObject:@"text/html"]];
+    
+    [manager POST:urlStr parameters:params constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
+        
+        [formData appendPartWithFileData:data name:@"uploadFiles" fileName:@"image0.png" mimeType:@"image/png"];
+        
+    } success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        NSLog(@"上传成功responseObject == %@",responseObject);
+        
+        self.uploadImage.image = image;
+        
+        _responsePicId = responseObject[@"id"];
+        
+        NSLog(@"%@",_responsePicId);
+        
+        [self.view makeToast:@"上传案例成功" duration:0.6 position:nil];
+        
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        [self.view makeToast:@"上传案例失败" duration:0.6 position:nil];
+    }];
+
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    
+}
+
+-(void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+//对图片尺寸进行压缩--
+-(UIImage*)imageWithImage:(UIImage*)image scaledToSize:(CGSize)newSize
+{
+    
+    UIGraphicsBeginImageContext(newSize);
+    [image drawInRect:CGRectMake(0,0,newSize.width,newSize.height)];
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return newImage;
+}
+
+
+@end

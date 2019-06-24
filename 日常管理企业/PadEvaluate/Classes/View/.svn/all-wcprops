@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View
+END
+LeftCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/LeftCell.h
+END
+SecondCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/SecondCell.h
+END
+DeadCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/DeadCell.h
+END
+LeftCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/LeftCell.m
+END
+LifeCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/LifeCell.h
+END
+UnitCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/UnitCell.h
+END
+SecondCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/SecondCell.m
+END
+UpScoreCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/UpScoreCell.h
+END
+DeadCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/DeadCell.m
+END
+LifeCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/LifeCell.m
+END
+UnitCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/UnitCell.m
+END
+UpScoreCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/dc-v3/!svn/ver/23728/ios/dc-mobile-PadEvaluate/PadEvaluate/Classes/View/UpScoreCell.m
+END
